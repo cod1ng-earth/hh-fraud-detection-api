@@ -1,0 +1,17 @@
+{
+  "name": "Fraud detection",
+  "description": "a flask app",
+  "image": "heroku/python",
+  "keywords": [
+    "python",
+    "flask"
+  ],
+  "addons": [],
+  "env": {
+    "SECRET_KEY": {
+      "description": "a secret",
+      "generator": "secret"
+    }
+  },
+  "environments": {}
+}
