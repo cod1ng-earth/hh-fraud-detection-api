@@ -2,12 +2,15 @@ import json
 import numpy as np
 
 from flask import Flask
+from flask_cors import CORS
+
 from compute import compute
 from keras.models import load_model
 
 autoencoder = load_model('model.h5')
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/')
