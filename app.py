@@ -1,16 +1,56 @@
 import json
 import numpy as np
+import sqlite3
 
 from flask import Flask
+from flask import g
 from flask_cors import CORS
 
 from compute import compute
 from keras.models import load_model
+from lib.db import query_db
 
 autoencoder = load_model('model.h5')
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.before_request
+def before_request():
+    g.db = sqlite3.connect(
+        "claims.db"
+    )
+
+
+@app.teardown_request
+def teardown_request(exception):
+    if hasattr(g, 'db'):
+        g.db.close()
+
+
+@app.route('/provider/<providerId>/claims')
+def provider(providerId):
+
+    res = query_db(
+        'select * from Outpatient i left join Beneficiary B on i.BeneID = B.BeneID where Provider= ?', (providerId,))
+    return json.dumps(res)
+
+
+@app.route('/provider/<providerId>/fraud')
+def provider_fraud(providerId):
+
+    res = query_db(
+        'select * from Fraud where Provider= ?', (providerId,))
+    return json.dumps(res)
+
+
+@app.route('/provider')
+def providers():
+    res = query_db(
+        'select count(ClaimID) cc, Provider, * from Outpatient group by Provider order by cc DESC LIMIT 100')
+
+    return json.dumps(res)
 
 
 @app.route('/')
