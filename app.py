@@ -51,10 +51,11 @@ def provider_fraud(providerId):
     return json.dumps(res)
 
 
+# yields providers with around 300 claims
 @app.route('/provider')
 def providers():
     res = query_db(
-        'select count(ClaimID) cc, Provider, * from Outpatient group by Provider order by cc DESC LIMIT 100')
+        'select count(ClaimID) cc, Provider, * from Outpatient group by Provider order by cc DESC LIMIT 400')
 
     return json.dumps(res)
 
