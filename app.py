@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import sqlite3
+import os.path
 
 from flask import Flask
 from flask import g
@@ -9,6 +10,8 @@ from flask_cors import CORS
 from compute import compute
 from keras.models import load_model
 from lib.db import query_db
+from urllib.request import urlretrieve
+
 
 autoencoder = load_model('model.h5')
 
@@ -18,6 +21,9 @@ CORS(app)
 
 @app.before_request
 def before_request():
+    if not os.path.isfile("claims.db"):
+        urlretrieve("http://stadolf.de/claims.db", "claims.db")
+
     g.db = sqlite3.connect(
         "claims.db"
     )
