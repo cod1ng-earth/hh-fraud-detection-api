@@ -76,7 +76,7 @@ def providers():
 
 
 @app.route('/check-fraud', methods=['POST'])
-def checkFraud2():
+def checkFraud():
     claims = request.get_json()
     result = callModel(claims)
 
