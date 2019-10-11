@@ -1,19 +1,18 @@
 import json
-import numpy as np
+
 import sqlite3
 import os.path
 
 from flask import Flask
 from flask import g
+from flask import request
+from flask import Response
 from flask_cors import CORS
 
-from compute import compute
-from keras.models import load_model
 from lib.db import query_db
+from lib.compute import callModel
 from urllib.request import urlretrieve
-
-
-autoencoder = load_model('model.h5')
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -55,26 +54,20 @@ def provider_fraud(providerId):
 @app.route('/provider')
 def providers():
     res = query_db(
-        'select count(ClaimID) cc, Provider, * from Outpatient group by Provider order by cc DESC LIMIT 100 offset 400')
+        'select count(ClaimID) cc, Provider, * from Outpatient group by Provider order by cc DESC LIMIT 100 offset 1500')
 
     return json.dumps(res)
 
 
-@app.route('/')
-def hello_world():
+@app.route('/check-fraud', methods=['POST'])
+def checkFraud():
+    claims = request.get_json()
+    result = callModel(claims)
 
-    # the first line of "X_test_AE"
-    q = [[-2.83734569e+00,  9.83227741e-01,  2.73217562e-01, -4.78524696e-03,
-          5.23113546e-02, -1.04610328e-03,  4.69188007e-02,  2.90218719e-02,
-          1.25953972e-02, -3.60372131e-01,  9.00870408e-02,  7.19589387e-02,
-          -7.79629676e-02, -3.79993916e-02,  1.02092528e-01, -3.35155292e-02,
-          -1.48795630e-02,  1.97393418e-02, -1.22867991e-01,  4.32997898e-02,
-          -1.42723225e-03, -9.13176842e-02,  1.81666606e-02, -4.26211488e-02,
-          -4.27991657e-02,  4.06663542e-02,  4.96137126e-02, -4.97330536e-03,
-          3.21861799e-02]]
+    # now, just mock it
+    result = {'fraud': random.random()}
 
-    prediction = autoencoder.predict(np.array(q))
-    return json.dumps(prediction.tolist())
+    return Response(json.dumps(result), mimetype='application/json')
 
 
 if __name__ == '__main__':
