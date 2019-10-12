@@ -81,7 +81,6 @@ def all_claims(providerId):
                 from Outpatient
                 where Provider = ?
             ) q left join Beneficiary b on b.BeneID = q.BeneID
-            limit 10
     ;
     """
     return query_db(sql, (providerId, providerId))
