@@ -8,15 +8,24 @@ from flask import g
 from flask import request
 from flask import Response
 from flask_cors import CORS
+from flask import flash, render_template, redirect, url_for
 
 from lib.db import query_db
 from lib.compute import callModel
 from urllib.request import urlretrieve
 import random
 
+import csv
+from werkzeug.utils import secure_filename
 app = Flask(__name__)
 CORS(app)
 
+UPLOAD_FOLDER = 'Uploads'
+ALLOWED_EXTENSIONS = set(['csv', 'Json'])
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SECRET_KEY'] ='Blub'
 
 @app.before_request
 def before_request():
@@ -74,6 +83,54 @@ def checkFraud():
     # now, just mock it
     result = {'fraud': random.random()}
 
+    return Response(json.dumps(result), mimetype='application/json')
+
+#def allowed_file(filename):
+#    return '.' in filename and \
+#           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file:
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('upload_file',filename=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Upload>
+    </form>
+    '''       
+
+@app.route('/parseCSVToJSON')
+def checkFraud():
+
+    f = open( '/Uploads/CSVTest.csv', 'rU' ) 
+    reader = csv.DictReader( f, fieldnames = ( "fieldname0","fieldname1","fieldname2","fieldname3" ))  
+    parsedCsvToJson = json.dumps( [ row for row in reader ] )   
+    f = open( 'CSVTest.json', 'w')  
+    f.write(parsedCsvToJson)   
+
+
+    claims = request.get_json()
+    result = callModel(claims)
+
+    # now, just mock it
+    result = {'fraud': random.random()}
     return Response(json.dumps(result), mimetype='application/json')
 
 
